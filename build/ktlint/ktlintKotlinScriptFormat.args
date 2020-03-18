@@ -1,0 +1,6 @@
+--reporter=plain
+--color
+--reporter=plain,output=C:\Users\nikil\projects\kotlin\build\reports\ktlint\ktlintKotlinScriptFormat.txt
+-F
+build.gradle.kts
+settings.gradle.kts
