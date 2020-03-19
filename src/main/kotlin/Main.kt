@@ -13,7 +13,10 @@ fun main() {
     embeddedServer(Netty, 8080) {
         routing {
             get("/") {
-                call.respondText("Hello, World, KotlinNiki!")
+                call.respondText("Hello, World!")
+            }
+            get("/test") {
+                call.respondText("Testing")
             }
         }
     }.start(wait = true)
