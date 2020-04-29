@@ -46,5 +46,5 @@ fun Application.adder() {
 }
 
 fun main() {
-    embeddedServer(Netty, port = 8008, module = Application::adder).start(wait = true)
+    embeddedServer(Netty, port = 8012, module = Application::adder).start(wait = true)
 }
