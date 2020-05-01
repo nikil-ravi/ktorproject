@@ -1,5 +1,6 @@
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.google.gson.JsonObject
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
@@ -9,25 +10,19 @@ import io.ktor.response.respond
 import io.ktor.response.respondText
 import io.ktor.routing.get
 import io.ktor.routing.routing
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
 import java.io.File
 import java.util.HashMap
 
 
-val data: CovidData? = null;
-
-fun hello(): String {
-    return "Hello, world!"
-}
-
-data class Case(val date: String, val confirmed: Int, val deaths: Int, val recovered: Int)
-
-
+var data: CovidData? = null;
 
 fun CovidData.toJson(): String = ObjectMapper().writeValueAsString(this)
 
 fun String.toCovidData(): CovidData = ObjectMapper().readValue(this)
 
-fun Application.adder() {
+fun Application.dataGetter() {
     install(io.ktor.features.ContentNegotiation) {
         gson {}
     }
@@ -36,18 +31,26 @@ fun Application.adder() {
             call.respondText("In the URL, specify the following: \n" +
                 "1. Country\n" +
                 "2. Month (1-12)\n" +
-                "3. day of the month (01-30)")
+                "3. day of the month (1-30)")
         }
         get("/{country}/{month}/{date}") {
             try {
                 val country = call.parameters["country"]!!.toString()
                 val month = call.parameters["month"]!!.toInt()
                 val date = call.parameters["date"]!!.toInt()
-                /*val result = Result(country, month, date, when (operation) {
+                if (month > 12 || month <= 0 || date > 31 || date <= 0)
+                    throw java.lang.Exception("Invalid input")
 
-                    else -> throw java.lang.Exception("Invalid input")
-                })*/
-                call.respond("Heyo")
+                val requiredData: CountryData? = getRequiredData(date, month)
+
+                if (requiredData == null) {
+                    call.respond("Invalid request")
+                } else {
+                    call.respond("Date: " + requiredData.getDate().toString() +
+                                "\nConfirmed: " + requiredData.getConfirmed().toString() +
+                                "\nRecovered: " + requiredData.getRecovered().toString() +
+                                "\nDeaths: " + requiredData.getDeaths().toString());
+                }
             } catch(e: Exception) {
                 call.respond(HttpStatusCode.BadRequest)
             }
@@ -56,7 +59,8 @@ fun Application.adder() {
 }
 
 fun main() {
-    //embeddedServer(Netty, port = 8012, module = Application::adder).start(wait = true)
+    getJsonFromFile("./src/main/resources/data.json")
+    embeddedServer(Netty, port = 8012, module = Application::dataGetter).start(wait = true)
     /*ApiData.apiData( object :ApiData.Response{
         override fun data(data: Model.Result, status: Boolean) {
             if(status){
@@ -65,8 +69,6 @@ fun main() {
         }
 
     })*/
-    getJsonFromFile("./src/main/resources/data.json")
-
 }
 
 fun getJsonFromFile(file: String): CovidData {
@@ -75,25 +77,21 @@ fun getJsonFromFile(file: String): CovidData {
     //mapper.registerModule(JavaTimeModule())
     val jsonString: String = File(file).readText(Charsets.UTF_8)
     println(jsonString);
-    val data: CovidData = jsonString.toCovidData();
+    data = jsonString.toCovidData();
     //println(data.countryInfo)
-    return data
+    return data as CovidData
 }
 
-fun getRequiredData(date: String, month: Int): CountryData {
+fun getRequiredData(date: Int, month: Int): CountryData? {
     val countryData: List<CountryData?>? = data?.getUS();
     if (countryData != null) {
         for (country_data: CountryData? in countryData) {
             if (country_data != null) {
-                if (country_data.getDate() == "2020-" + month.toString() + "-" + date.toString()) {
-
+                if (country_data.getDate().equals("2020-" + month.toString() + "-" + date.toString())) {
+                    return country_data
                 }
             }
         }
-        /*val jsonTextList:List<Covid> = mapper.readValue<List<Covid>>(jsonString)
-    for (covidData in jsonTextList) {
-        println(covidData)
-    }*/
-
     }
+    return null;
 }
