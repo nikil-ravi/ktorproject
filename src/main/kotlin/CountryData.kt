@@ -6,6 +6,9 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonPropertyOrder
 import java.util.HashMap
 
+/**
+ * Represents a specific country's data for a specific date-month-year triple.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder(
     "date",

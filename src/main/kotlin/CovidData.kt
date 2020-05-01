@@ -5,6 +5,10 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonPropertyOrder
 import java.util.HashMap
 
+
+/**
+ * Represents a country's data (for now, this is only the US)
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder("US")
 public class CovidData {
